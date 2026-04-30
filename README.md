@@ -4,7 +4,8 @@ Personal learning tracker for my 4 month Data Engineering journey — Phase 1.
 Built with vanilla HTML, CSS, JavaScript and Supabase as the PostgreSQL backend.
 
 ## Live Site
-https://dan.github.io/de-tracker
+https://progress-tracker-dusky-rho.vercel.app/
+
 
 ## Stack
 HTML · CSS · JavaScript · Supabase (PostgreSQL)
