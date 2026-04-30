@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dan — DE Learning Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --bg-2: #111111;
+    --bg-3: #1a1a1a;
+    --bg-4: #222222;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --text-2: #888888;
+    --text-3: #555555;
+    --accent: #e8ff4d;
+    --accent-dim: rgba(232,255,77,0.1);
+    --accent-border: rgba(232,255,77,0.3);
+    --green: #4dff9a;
+    --green-dim: rgba(77,255,154,0.1);
+    --red: #ff4d4d;
+    --red-dim: rgba(255,77,77,0.1);
+    --blue: #4d9aff;
+    --blue-dim: rgba(77,154,255,0.1);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--bg-2);
+    border-right: 1px solid var(--border);
+    padding: 32px 0;
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    padding: 0 24px 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .sidebar-brand-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+
+  .sidebar-brand-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    text-transform: uppercase;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--bg-3); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
+
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .streak-display {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+
+  .streak-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+    font-family: var(--mono);
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 40px;
+    max-width: calc(100vw - 220px);
+  }
+
+  /* PAGE */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .page-subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .page-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card:hover { border-color: var(--border-hover); }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .card-value {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+
+  .card-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  /* GRID */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+
+  /* PROGRESS BARS */
+  .progress-item { margin-bottom: 20px; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-topic {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .progress-month {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+
+  .progress-pct {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--bg-4);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .progress-fill.green { background: var(--green); }
+  .progress-fill.blue { background: var(--blue); }
+
+  /* FORM */
+  .form-group { margin-bottom: 20px; }
+
+  .form-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-select option { background: var(--bg-3); }
+
+  /* CONFIDENCE BUTTONS */
+  .confidence-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .conf-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .conf-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .conf-btn.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* SUBMIT BTN */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 700;
+    transition: opacity 0.15s;
+    margin-top: 8px;
+  }
+
+  .btn-submit:hover { opacity: 0.85; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* LOG ENTRIES */
+  .log-entry {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s;
+  }
+
+  .log-entry:hover { border-color: var(--border-hover); }
+
+  .log-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .log-entry-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+
+  .log-entry-topic {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .log-entry-meta {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 12px;
+  }
+
+  .log-meta-item {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .log-meta-value {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .log-entry-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .log-section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .log-section-text {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .clicked-section .log-section-text { color: var(--green); }
+  .confused-section .log-section-text { color: var(--red); }
+
+  /* WEAKNESS TAGS */
+  .weakness-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .weakness-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    background: var(--red-dim);
+    border: 1px solid rgba(255,77,77,0.2);
+    color: var(--red);
+    letter-spacing: 0.04em;
+  }
+
+  .weakness-count {
+    background: var(--red);
+    color: var(--bg);
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* MONTHLY TIMELINE */
+  .month-block {
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .month-header {
+    padding: 16px 24px;
+    background: var(--bg-3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .month-header:hover { background: var(--bg-4); }
+
+  .month-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .month-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .month-status.current { color: var(--accent); }
+  .month-status.upcoming { color: var(--text-3); }
+  .month-status.done { color: var(--green); }
+
+  .month-body {
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .month-topic-list { list-style: none; }
+
+  .month-topic-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  .month-topic-item:last-child { border-bottom: none; }
+
+  .topic-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-done { background: var(--green); }
+  .dot-active { background: var(--accent); }
+  .dot-pending { background: var(--text-3); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    padding: 14px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.04em;
+    max-width: 320px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* STATUS */
+  .status-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .badge-connected { background: var(--green-dim); border: 1px solid rgba(77,255,154,0.2); color: var(--green); }
+  .badge-disconnected { background: var(--red-dim); border: 1px solid rgba(255,77,77,0.2); color: var(--red); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    border: 1px solid var(--border);
+  }
+
+  .empty-state-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .empty-state-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    opacity: 0.6;
+  }
+
+  /* LOADING */
+  .loading {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .loading::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
+
+  /* UPDATE PROGRESS */
+  .progress-update-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .progress-update-row:last-child { border-bottom: none; }
+
+  .progress-update-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    width: 160px;
+    flex-shrink: 0;
+  }
+
+  .progress-update-input {
+    width: 80px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .progress-update-input:focus { border-color: var(--accent); }
+
+  .progress-update-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--bg-4);
+  }
+
+  .progress-update-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+
+  .btn-update-progress {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 16px;
+  }
+
+  .btn-update-progress:hover { background: var(--accent-dim); }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; min-height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 16px; }
+    .main { margin-left: 0; padding: 20px; max-width: 100%; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .log-entry-body { grid-template-columns: 1fr; }
+    .app { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-name">de.tracker</div>
+      <div class="sidebar-brand-sub">dan / phase 01</div>
+    </div>
+
+    <nav>
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <div class="nav-dot"></div>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('checkin')">
+        <div class="nav-dot"></div>
+        Daily Check In
+      </div>
+      <div class="nav-item" onclick="navigate('progress')">
+        <div class="nav-dot"></div>
+        Progress
+      </div>
+      <div class="nav-item" onclick="navigate('logs')">
+        <div class="nav-dot"></div>
+        Log History
+      </div>
+      <div class="nav-item" onclick="navigate('weaknesses')">
+        <div class="nav-dot"></div>
+        Weaknesses
+      </div>
+      <div class="nav-item" onclick="navigate('roadmap')">
+        <div class="nav-dot"></div>
+        Roadmap
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="streak-display">
+        <div class="streak-num" id="sidebar-streak">0</div>
+        <div>day streak</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle">Phase 01 — Core Skills — May to August 2026</div>
+        </div>
+        <div>
+          <div class="page-date" id="current-date"></div>
+          <div style="margin-top:6px; text-align:right;" id="connection-status"></div>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-label">Current Streak</div>
+          <div class="card-value" id="dash-streak">0</div>
+          <div class="card-sub">days consecutive</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total Sessions</div>
+          <div class="card-value" id="dash-sessions">0</div>
+          <div class="card-sub">logged so far</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Questions Solved</div>
+          <div class="card-value" id="dash-questions">0</div>
+          <div class="card-sub">total across all sessions</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Avg Confidence</div>
+          <div class="card-value" id="dash-confidence">-</div>
+          <div class="card-sub">out of 5</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-title">Phase 1 Progress</div>
+          <div id="dash-progress-bars">
+            <div class="loading">Loading progress</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Recent Activity</div>
+          <div id="dash-recent">
+            <div class="loading">Loading logs</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Current Focus</div>
+      <div class="grid-3">
+        <div class="card" style="border-color: var(--accent-border);">
+          <div class="card-label" style="color: var(--accent);">May — Active</div>
+          <div style="font-size:18px; font-weight:700; margin-bottom:8px;">SQL</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--text-3);">HackerRank daily · PostgreSQL terminal · Certificate target</div>
+        </div>
+        <div class="card">
+          <div class="card-label">June — Next</div>
+          <div style="font-size:18px; font-weight:700; margin-bottom:8px;">Python</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--text-3);">Basics · Pandas · Connect to PostgreSQL</div>
+        </div>
+        <div class="card">
+          <div class="card-label">July — Upcoming</div>
+          <div style="font-size:18px; font-weight:700; margin-bottom:8px;">Spark + Platform</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--text-3);">PySpark basics · BigQuery · Data Pipelines</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY CHECK IN -->
+    <div class="page" id="page-checkin">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Daily Check In</div>
+          <div class="page-subtitle">Log your practice session</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="log-date" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Topic studied today</label>
+            <select class="form-select" id="log-topic">
+              <option value="">Select topic</option>
+              <option value="SQL">SQL</option>
+              <option value="Python">Python</option>
+              <option value="Pandas">Pandas</option>
+              <option value="Spark & PySpark">Spark & PySpark</option>
+              <option value="Data Platform">Data Platform</option>
+              <option value="Data Pipelines">Data Pipelines</option>
+              <option value="Git & GitHub">Git & GitHub</option>
+              <option value="Docker">Docker</option>
+              <option value="PostgreSQL">PostgreSQL</option>
+              <option value="DE Project">DE Project</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Questions solved</label>
+            <input type="number" class="form-input" id="log-questions" min="0" placeholder="0" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confidence level</label>
+            <div class="confidence-group">
+              <div class="conf-btn" onclick="selectConfidence(1)">1<br><span style="font-size:9px;opacity:0.6;">lost</span></div>
+              <div class="conf-btn" onclick="selectConfidence(2)">2<br><span style="font-size:9px;opacity:0.6;">shaky</span></div>
+              <div class="conf-btn" onclick="selectConfidence(3)">3<br><span style="font-size:9px;opacity:0.6;">okay</span></div>
+              <div class="conf-btn" onclick="selectConfidence(4)">4<br><span style="font-size:9px;opacity:0.6;">solid</span></div>
+              <div class="conf-btn" onclick="selectConfidence(5)">5<br><span style="font-size:9px;opacity:0.6;">locked</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label">What clicked today</label>
+            <textarea class="form-textarea" id="log-clicked" placeholder="What concepts made sense. Be specific."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">What confused you</label>
+            <textarea class="form-textarea" id="log-confused" placeholder="What did not click. What needs more practice."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="log-notes" placeholder="Any extra observations or reminders." style="min-height:60px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitLog()">Log Today's Session</button>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="page" id="page-progress">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Progress</div>
+          <div class="page-subtitle">Update your topic percentages</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-title">Topic Progress</div>
+          <div id="progress-update-list">
+            <div class="loading">Loading</div>
+          </div>
+          <button class="btn-update-progress" onclick="saveProgress()">Save Progress</button>
+        </div>
+        <div>
+          <div class="section-title">Visual Overview</div>
+          <div id="progress-visual">
+            <div class="loading">Loading</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG HISTORY -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Log History</div>
+          <div class="page-subtitle">All your practice sessions</div>
+        </div>
+        <select class="form-select" style="width:160px;" onchange="filterLogs(this.value)">
+          <option value="">All topics</option>
+          <option value="SQL">SQL</option>
+          <option value="Python">Python</option>
+          <option value="Pandas">Pandas</option>
+          <option value="Spark & PySpark">Spark & PySpark</option>
+          <option value="Data Platform">Data Platform</option>
+          <option value="Data Pipelines">Data Pipelines</option>
+          <option value="Git & GitHub">Git & GitHub</option>
+          <option value="Docker">Docker</option>
+          <option value="PostgreSQL">PostgreSQL</option>
+        </select>
+      </div>
+      <div id="logs-container">
+        <div class="loading">Loading logs</div>
+      </div>
+    </div>
+
+    <!-- WEAKNESSES -->
+    <div class="page" id="page-weaknesses">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Weaknesses</div>
+          <div class="page-subtitle">Topics and concepts to revisit</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-title">Recurring Confusions</div>
+          <div id="weakness-tags">
+            <div class="loading">Analysing logs</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Low Confidence Sessions</div>
+          <div id="low-confidence-list">
+            <div class="loading">Loading</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:8px;">What You Said Was Confusing</div>
+      <div id="confused-entries">
+        <div class="loading">Loading</div>
+      </div>
+    </div>
+
+    <!-- ROADMAP -->
+    <div class="page" id="page-roadmap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Roadmap</div>
+          <div class="page-subtitle">Phase 1 — May to August 2026</div>
+        </div>
+      </div>
+
+      <div id="roadmap-months"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — REPLACE THESE WITH YOUR SUPABASE CREDENTIALS
+// ============================================================
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// ============================================================
+
+let selectedConfidence = null;
+let allLogs = [];
+let progressData = [];
+
+// API HELPERS
+async function supabaseGet(table, query = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function supabasePost(table, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return true;
+}
+
+async function supabasePatch(table, id, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return true;
+}
+
+// NAVIGATION
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  event.currentTarget.classList.add('active');
+  loadPage(page);
+}
+
+function loadPage(page) {
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'progress') loadProgress();
+  if (page === 'logs') loadLogs();
+  if (page === 'weaknesses') loadWeaknesses();
+  if (page === 'roadmap') renderRoadmap();
+}
+
+// INIT
+async function init() {
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+
+  try {
+    await supabaseGet('progress', '?limit=1');
+    document.getElementById('connection-status').innerHTML = '<span class="status-badge badge-connected">connected</span>';
+    loadDashboard();
+  } catch (e) {
+    document.getElementById('connection-status').innerHTML = '<span class="status-badge badge-disconnected">not connected</span>';
+    showToast('Check your Supabase credentials in the config', 'error');
+  }
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  try {
+    const [logs, progress] = await Promise.all([
+      supabaseGet('daily_logs', '?order=log_date.desc'),
+      supabaseGet('progress', '?order=id.asc')
+    ]);
+
+    allLogs = logs;
+    progressData = progress;
+
+    // stats
+    const totalQ = logs.reduce((s, l) => s + (l.questions_solved || 0), 0);
+    const avgConf = logs.filter(l => l.confidence).length > 0
+      ? (logs.reduce((s, l) => s + (l.confidence || 0), 0) / logs.filter(l => l.confidence).length).toFixed(1)
+      : '-';
+
+    document.getElementById('dash-sessions').textContent = logs.length;
+    document.getElementById('dash-questions').textContent = totalQ;
+    document.getElementById('dash-confidence').textContent = avgConf;
+
+    const streak = calcStreak(logs);
+    document.getElementById('dash-streak').textContent = streak;
+    document.getElementById('sidebar-streak').textContent = streak;
+
+    // progress bars
+    const pbEl = document.getElementById('dash-progress-bars');
+    pbEl.innerHTML = progress.map(p => `
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-topic">${p.topic}</span>
+          <span class="progress-pct">${p.percentage}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${p.percentage}%"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // recent
+    const recentEl = document.getElementById('dash-recent');
+    if (logs.length === 0) {
+      recentEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">No logs yet</div><div class="empty-state-sub">Log your first session today</div></div>';
+    } else {
+      recentEl.innerHTML = logs.slice(0, 5).map(l => `
+        <div class="log-entry" style="margin-bottom:10px;">
+          <div class="log-entry-header">
+            <span class="log-entry-date">${formatDate(l.log_date)}</span>
+            <span class="log-entry-topic">${l.topic || 'general'}</span>
+          </div>
+          <div class="log-entry-meta">
+            <span class="log-meta-item">Questions: <span class="log-meta-value">${l.questions_solved || 0}</span></span>
+            <span class="log-meta-item">Confidence: <span class="log-meta-value">${l.confidence || '-'}/5</span></span>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// CHECKIN
+function selectConfidence(val) {
+  selectedConfidence = val;
+  document.querySelectorAll('.conf-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i + 1 === val);
+  });
+}
+
+async function submitLog() {
+  const date = document.getElementById('log-date').value;
+  const topic = document.getElementById('log-topic').value;
+  const questions = parseInt(document.getElementById('log-questions').value) || 0;
+  const clicked = document.getElementById('log-clicked').value.trim();
+  const confused = document.getElementById('log-confused').value.trim();
+  const notes = document.getElementById('log-notes').value.trim();
+
+  if (!date || !topic) {
+    showToast('Date and topic are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    await supabasePost('daily_logs', {
+      log_date: date,
+      topic,
+      questions_solved: questions,
+      confidence: selectedConfidence,
+      what_clicked: clicked || null,
+      what_confused: confused || null,
+      notes: notes || null
+    });
+
+    showToast('Session logged successfully', 'success');
+    document.getElementById('log-topic').value = '';
+    document.getElementById('log-questions').value = '';
+    document.getElementById('log-clicked').value = '';
+    document.getElementById('log-confused').value = '';
+    document.getElementById('log-notes').value = '';
+    selectedConfidence = null;
+    document.querySelectorAll('.conf-btn').forEach(b => b.classList.remove('selected'));
+
+  } catch (e) {
+    showToast('Failed to save. Check connection.', 'error');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Log Today\'s Session';
+}
+
+// PROGRESS PAGE
+async function loadProgress() {
+  try {
+    const progress = await supabaseGet('progress', '?order=id.asc');
+    progressData = progress;
+
+    const colors = ['', 'green', 'blue', '', 'green', 'blue', ''];
+
+    document.getElementById('progress-update-list').innerHTML = progress.map((p, i) => `
+      <div class="progress-update-row">
+        <div class="progress-update-label">${p.topic}</div>
+        <input type="number" class="progress-update-input" id="pct-${p.id}"
+          value="${p.percentage}" min="0" max="100"
+          oninput="updateProgressBar(${p.id}, this.value)" />
+        <div class="progress-update-bar">
+          <div class="progress-update-fill" id="pbar-${p.id}" style="width:${p.percentage}%"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);width:36px;text-align:right;" id="plabel-${p.id}">${p.percentage}%</span>
+      </div>
+    `).join('');
+
+    document.getElementById('progress-visual').innerHTML = progress.map((p, i) => `
+      <div class="progress-item">
+        <div class="progress-header">
+          <div>
+            <span class="progress-topic">${p.topic}</span>
+            <span class="progress-month" style="margin-left:8px;">${getTopicMonth(p.topic)}</span>
+          </div>
+          <span class="progress-pct">${p.percentage}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${colors[i] || ''}" style="width:${p.percentage}%"></div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function updateProgressBar(id, val) {
+  const pct = Math.min(100, Math.max(0, parseInt(val) || 0));
+  const bar = document.getElementById(`pbar-${id}`);
+  const label = document.getElementById(`plabel-${id}`);
+  if (bar) bar.style.width = pct + '%';
+  if (label) label.textContent = pct + '%';
+}
+
+async function saveProgress() {
+  const inputs = document.querySelectorAll('.progress-update-input');
+  try {
+    for (const input of inputs) {
+      const id = input.id.replace('pct-', '');
+      const pct = Math.min(100, Math.max(0, parseInt(input.value) || 0));
+      await supabasePatch('progress', id, { percentage: pct, updated_at: new Date().toISOString() });
+    }
+    showToast('Progress saved', 'success');
+  } catch (e) {
+    showToast('Failed to save progress', 'error');
+    console.error(e);
+  }
+}
+
+// LOGS
+async function loadLogs(filter = '') {
+  try {
+    let query = '?order=log_date.desc';
+    if (filter) query += `&topic=eq.${encodeURIComponent(filter)}`;
+    const logs = await supabaseGet('daily_logs', query);
+    allLogs = logs;
+    renderLogs(logs);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function filterLogs(topic) {
+  loadLogs(topic);
+}
+
+function renderLogs(logs) {
+  const el = document.getElementById('logs-container');
+  if (logs.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-title">No logs found</div><div class="empty-state-sub">Start logging your daily sessions</div></div>';
+    return;
+  }
+  el.innerHTML = logs.map(l => `
+    <div class="log-entry">
+      <div class="log-entry-header">
+        <span class="log-entry-date">${formatDate(l.log_date)}</span>
+        <span class="log-entry-topic">${l.topic || 'general'}</span>
+      </div>
+      <div class="log-entry-meta">
+        <span class="log-meta-item">Questions: <span class="log-meta-value">${l.questions_solved || 0}</span></span>
+        <span class="log-meta-item">Confidence: <span class="log-meta-value">${l.confidence || '-'}/5</span></span>
+      </div>
+      <div class="log-entry-body">
+        <div class="clicked-section">
+          <div class="log-section-title">Clicked</div>
+          <div class="log-section-text">${l.what_clicked || '—'}</div>
+        </div>
+        <div class="confused-section">
+          <div class="log-section-title">Confused</div>
+          <div class="log-section-text">${l.what_confused || '—'}</div>
+        </div>
+      </div>
+      ${l.notes ? `<div style="margin-top:12px;"><div class="log-section-title">Notes</div><div class="log-section-text" style="color:var(--text-2);">${l.notes}</div></div>` : ''}
+    </div>
+  `).join('');
+}
+
+// WEAKNESSES
+async function loadWeaknesses() {
+  try {
+    const logs = await supabaseGet('daily_logs', '?order=log_date.desc');
+
+    // extract confused topics
+    const confusedTexts = logs.filter(l => l.what_confused).map(l => l.what_confused);
+    const words = confusedTexts.join(' ').toLowerCase().split(/[\s,.\n]+/);
+    const keywords = ['window', 'functions', 'joins', 'subquery', 'cte', 'partition', 'rank', 'group', 'having', 'pandas', 'spark', 'docker', 'airflow', 'python', 'sql', 'pyspark', 'etl', 'pipeline'];
+    const counts = {};
+    words.forEach(w => {
+      if (keywords.includes(w)) counts[w] = (counts[w] || 0) + 1;
+    });
+
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    const tagsEl = document.getElementById('weakness-tags');
+    if (sorted.length === 0) {
+      tagsEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">No patterns yet</div><div class="empty-state-sub">Log more sessions to identify weaknesses</div></div>';
+    } else {
+      tagsEl.innerHTML = '<div class="weakness-list">' + sorted.map(([w, c]) => `
+        <div class="weakness-tag">${w}<span class="weakness-count">${c}</span></div>
+      `).join('') + '</div>';
+    }
+
+    // low confidence
+    const lowConf = logs.filter(l => l.confidence && l.confidence <= 2);
+    const lcEl = document.getElementById('low-confidence-list');
+    if (lowConf.length === 0) {
+      lcEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">No low confidence sessions</div><div class="empty-state-sub">Keep it up</div></div>';
+    } else {
+      lcEl.innerHTML = lowConf.slice(0, 5).map(l => `
+        <div class="log-entry" style="margin-bottom:10px;">
+          <div class="log-entry-header">
+            <span class="log-entry-date">${formatDate(l.log_date)}</span>
+            <span class="log-entry-topic">${l.topic}</span>
+          </div>
+          <div class="log-section-text" style="color:var(--red); font-size:12px;">Confidence: ${l.confidence}/5</div>
+        </div>
+      `).join('');
+    }
+
+    // confused entries
+    const confEl = document.getElementById('confused-entries');
+    const withConfused = logs.filter(l => l.what_confused);
+    if (withConfused.length === 0) {
+      confEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">Nothing logged as confusing yet</div></div>';
+    } else {
+      confEl.innerHTML = withConfused.slice(0, 8).map(l => `
+        <div class="log-entry" style="margin-bottom:10px;">
+          <div class="log-entry-header">
+            <span class="log-entry-date">${formatDate(l.log_date)}</span>
+            <span class="log-entry-topic">${l.topic}</span>
+          </div>
+          <div class="log-section-text" style="color:var(--red);">${l.what_confused}</div>
+        </div>
+      `).join('');
+    }
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ROADMAP
+function renderRoadmap() {
+  const months = [
+    {
+      name: 'May 2026', status: 'current',
+      topics: [
+        { name: 'SQL — HackerRank daily 3 questions', status: 'active' },
+        { name: 'PostgreSQL — terminal practice', status: 'active' },
+        { name: 'HackerRank SQL Certificate', status: 'pending' },
+        { name: 'SQL analysis project on GitHub', status: 'pending' }
+      ]
+    },
+    {
+      name: 'June 2026', status: 'upcoming',
+      topics: [
+        { name: 'Python basics — variables, loops, functions', status: 'pending' },
+        { name: 'Pandas — DataFrames, cleaning, transformation', status: 'pending' },
+        { name: 'Connect Python to PostgreSQL', status: 'pending' },
+        { name: 'First Python ETL script', status: 'pending' }
+      ]
+    },
+    {
+      name: 'July 2026', status: 'upcoming',
+      topics: [
+        { name: 'Spark & PySpark basics', status: 'pending' },
+        { name: 'Data Platform — BigQuery or Snowflake', status: 'pending' },
+        { name: 'Data Pipelines in Python', status: 'pending' },
+        { name: 'Second project pushed to GitHub', status: 'pending' }
+      ]
+    },
+    {
+      name: 'August 2026', status: 'upcoming',
+      topics: [
+        { name: 'Data Engineering Capstone Project', status: 'pending' },
+        { name: 'Combines SQL, Python, Spark, Platform, Pipelines', status: 'pending' },
+        { name: 'Clean GitHub with professional READMEs', status: 'pending' },
+        { name: 'CV and LinkedIn updated', status: 'pending' },
+        { name: 'Phase 2 begins — Apply for jobs', status: 'pending' }
+      ]
+    }
+  ];
+
+  document.getElementById('roadmap-months').innerHTML = months.map(m => `
+    <div class="month-block">
+      <div class="month-header">
+        <span class="month-name">${m.name}</span>
+        <span class="month-status ${m.status}">${m.status}</span>
+      </div>
+      <div class="month-body">
+        <ul class="month-topic-list">
+          ${m.topics.map(t => `
+            <li class="month-topic-item">
+              <div class="topic-status-dot dot-${t.status}"></div>
+              ${t.name}
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
+}
+
+// HELPERS
+function calcStreak(logs) {
+  if (logs.length === 0) return 0;
+  const dates = [...new Set(logs.map(l => l.log_date))].sort().reverse();
+  let streak = 0;
+  let current = new Date();
+  current.setHours(0, 0, 0, 0);
+
+  for (const d of dates) {
+    const logDate = new Date(d);
+    logDate.setHours(0, 0, 0, 0);
+    const diff = Math.round((current - logDate) / (1000 * 60 * 60 * 24));
+    if (diff <= 1) {
+      streak++;
+      current = logDate;
+    } else break;
+  }
+  return streak;
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getTopicMonth(topic) {
+  const map = {
+    'SQL': 'May',
+    'Python': 'June',
+    'Pandas': 'June',
+    'Spark & PySpark': 'July',
+    'Data Platform': 'July',
+    'Data Pipelines': 'July',
+    'Git & GitHub': 'Throughout',
+    'DE Project': 'August'
+  };
+  return map[topic] || '';
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+init();
+</script>
+</body>
+</html>
